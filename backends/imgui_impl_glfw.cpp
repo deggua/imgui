@@ -766,6 +766,18 @@ static void ImGui_ImplGlfw_UpdateGamepads()
     #undef MAP_ANALOG
 }
 
+static inline float divss(float x, float y)
+{
+    asm(
+        "divss %[y], %[x]"
+        : [x] "+x" (x)
+        : [y] "x" (y)
+        :
+    );
+
+    return x;
+}
+
 void ImGui_ImplGlfw_NewFrame()
 {
     ImGuiIO& io = ImGui::GetIO();
@@ -779,7 +791,9 @@ void ImGui_ImplGlfw_NewFrame()
     glfwGetFramebufferSize(bd->Window, &display_w, &display_h);
     io.DisplaySize = ImVec2((float)w, (float)h);
     if (w > 0 && h > 0)
-        io.DisplayFramebufferScale = ImVec2((double)display_w / (double)w, (double)display_h / (double)h);
+        io.DisplayFramebufferScale = ImVec2(
+            divss(display_w, w),
+            divss(display_h, h));
 
     // Setup time step
     // (Accept glfwGetTime() not returning a monotonically increasing value. Seems to happens on disconnecting peripherals and probably on VMs and Emscripten, see #6491, #6189, #6114, #3644)
